@@ -30,6 +30,7 @@ from decimal import Decimal
 from service.models import Product, Category, db
 from service import app
 from tests.factories import ProductFactory
+from service.models import DataValidationError
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/postgres"
@@ -136,6 +137,16 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(len(products), 1)
         self.assertEqual(products[0].id, original_id)
         self.assertEqual(products[0].description, "testing")
+    
+    def test_no_id_update_raisesError(self):
+        """No id update should raise DataValidationError"""
+        product = ProductFactory()
+        product.create()
+        product.id = None
+        #product.update() #should raise DataValidationError
+        self.assertRaises(DataValidationError, product.update)
+
+        #self.assertIsNotNone(product.id)
 
     def test_delete_a_product(self):
         """It should Delete a Product"""
