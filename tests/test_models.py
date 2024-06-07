@@ -146,8 +146,23 @@ class TestProductModel(unittest.TestCase):
         #product.update() #should raise DataValidationError
         self.assertRaises(DataValidationError, product.update)
 
-        #self.assertIsNotNone(product.id)
-
+    def test_deserialize_raisesErroronAv(self):
+        """Should fail to deserialize a dict with available non bool value"""
+        product = ProductFactory()
+        serialized = product.serialize()
+        self.assertEqual(type(serialized), dict)
+        
+        serialized["available"]="Not a bool"
+       
+        self.assertRaises(DataValidationError, product.deserialize, serialized)
+    
+    def test_deserialize_raisesErroronCatergory(self):
+        """Should fail get undefined Catergory"""
+        product = ProductFactory()
+       
+        self.assertRaises(DataValidationError, product.deserialize, None)
+     
+    
     def test_delete_a_product(self):
         """It should Delete a Product"""
         product = ProductFactory()
@@ -180,6 +195,17 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(found.count(), count)
         for product in found:
             self.assertEqual(product.name, name)
+    
+    def test_find_by_price(self):
+        """It should Find a Product by price"""
+        products = ProductFactory.create_batch(5)
+        for product in products:
+            product.create()
+        price = products[0].price
+        match_ = Product.find_by_price(price)[0]
+        #match_ = [prod for prod in products if prod.price == price][0] #products can share prices
+
+        self.assertEqual(products[0].id, match_.id)
     
     def test_find_by_availability(self):
         """It should Find Products by Availability"""
